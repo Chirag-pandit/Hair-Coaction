@@ -1,12 +1,13 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "types": ["react"]
-  }
+    "target": "ES2020",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["api/**/*.ts"]
 }
 
