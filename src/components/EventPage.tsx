@@ -52,7 +52,13 @@ const quizQuestionsMap: Record<string, import('./QuizModal').QuizQuestion[]> = {
   ],
 };
 
-const EventsPage = () => {
+import type { User as FirebaseUser } from "firebase/auth";
+
+interface EventpagesProps {
+  user: FirebaseUser;
+}
+
+const EventsPage: React.FC<EventpagesProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState("overview")
   const [isLoading, setIsLoading] = useState(true)
   const [animateCards, setAnimateCards] = useState(false)
@@ -733,7 +739,7 @@ const EventsPage = () => {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100">
       {/* Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+  <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={undefined} />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
