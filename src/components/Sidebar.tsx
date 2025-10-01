@@ -17,12 +17,15 @@ import {
 } from 'lucide-react';
 import { Link } from "react-router-dom";
 
+
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  user?: { displayName?: string | null };
+  darkMode?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, darkMode }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -137,35 +140,35 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full bg-gradient-to-b from-pink-50 via-rose-50 to-orange-50 border-r border-pink-100 shadow-2xl z-40 sidebar-transition ${
+        className={`fixed left-0 top-0 h-full ${darkMode ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 border-r border-gray-700" : "bg-gradient-to-b from-pink-50 via-rose-50 to-orange-50 border-r border-pink-100"} shadow-2xl z-40 sidebar-transition ${
           isCollapsed ? 'w-20' : 'w-80'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 animate-slideInLeft flex flex-col`}
       >
         {/* Header */}
-        <div className="p-6 border-b border-pink-100 bg-white/50 backdrop-blur-sm">
+  <div className={`p-6 border-b ${darkMode ? "border-gray-700 bg-gray-900/70" : "border-pink-100 bg-white/50"} backdrop-blur-sm`}>
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div className="animate-fadeIn">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-gradient-to-r from-pink-500 to-rose-400 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg animate-pulse-gentle">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg animate-pulse-gentle ${darkMode ? "bg-gradient-to-r from-gray-700 to-gray-900" : "bg-gradient-to-r from-pink-500 to-rose-400"}`}>
                     <Heart className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+                    <h1 className={`text-xl font-bold bg-clip-text text-transparent ${darkMode ? "bg-gradient-to-r from-gray-300 to-gray-500" : "bg-gradient-to-r from-pink-600 to-rose-600"}`}>
                       Hair Coaction
                     </h1>
-                    <p className="text-sm text-gray-600">Hair Care</p>
+                    <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Hair Care</p>
                   </div>
                 </div>
               </div>
             )}
             <button
               onClick={toggleSidebar}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-pink-100 transition-all duration-200 hover:scale-110"
+              className={`hidden lg:flex p-2 rounded-lg transition-all duration-200 hover:scale-110 ${darkMode ? "hover:bg-gray-800" : "hover:bg-pink-100"}`}
             >
-              <ChevronRight className={`w-5 h-5 text-gray-600 sidebar-transition ${isCollapsed ? 'rotate-0' : 'rotate-180'}`} />
+              <ChevronRight className={`w-5 h-5 ${darkMode ? "text-gray-400" : "text-gray-600"} sidebar-transition ${isCollapsed ? 'rotate-0' : 'rotate-180'}`} />
             </button>
           </div>
         </div>
@@ -200,7 +203,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
           {/* Navigation */}
           <div className="px-6 py-4">
-            <h3 className={`text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
+            <h3 className={`text-sm font-semibold ${darkMode ? "text-gray-400" : "text-gray-700"} mb-4 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
               {isCollapsed ? '•••' : 'Navigation'}
             </h3>
             <nav className="space-y-2">
@@ -214,8 +217,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 hover-lift animate-scaleIn ${
                     activeTab === item.id
-                      ? `bg-gradient-to-r ${item.color} text-white shadow-lg`
-                      : 'text-gray-700 hover:bg-white/70 hover:text-gray-900'
+                      ? darkMode ? "bg-gradient-to-r from-gray-700 to-gray-900 text-white shadow-lg" : `bg-gradient-to-r ${item.color} text-white shadow-lg`
+                      : darkMode ? "text-gray-300 hover:bg-gray-800 hover:text-white" : 'text-gray-700 hover:bg-white/70 hover:text-gray-900'
                   } ${isCollapsed ? 'justify-center' : ''}`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
@@ -233,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
 
           {/* Quick Actions */}
           <div className="px-6 py-4 border-t border-pink-100 mt-auto">
-            <h3 className={`text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
+            <h3 className={`text-sm font-semibold ${darkMode ? "text-gray-400" : "text-gray-700"} mb-4 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
               {isCollapsed ? '•••' : 'Quick Actions'}
             </h3>
             <div className="space-y-2">
@@ -242,9 +245,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                   <Link
                     key={action.id}
                     to="/profile"
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-gray-700 hover:bg-white/70 hover:text-gray-900 transition-all duration-300 hover-lift animate-scaleIn ${
-                      isCollapsed ? 'justify-center' : ''
-                    }`}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 hover-lift animate-scaleIn ${
+                      darkMode ? "text-gray-300 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-white/70 hover:text-gray-900"
+                    } ${isCollapsed ? 'justify-center' : ''}`}
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <action.icon className="w-5 h-5" />
@@ -268,20 +271,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
         </div>
 
         {/* User Profile */}
-        <div className="p-6 border-t border-pink-100 bg-white/30 backdrop-blur-sm">
+        <div className={`p-6 border-t ${darkMode ? "border-gray-700 bg-gray-900/70" : "border-pink-100 bg-white/30"} backdrop-blur-sm`}>
           <div className={`flex items-center space-x-3 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-400 rounded-xl flex items-center justify-center shadow-lg">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${darkMode ? "bg-gradient-to-r from-gray-700 to-gray-900" : "bg-gradient-to-r from-pink-500 to-rose-400"}`}>
               <User className="w-5 h-5 text-white" />
             </div>
             {!isCollapsed && (
               <div className="flex-1 animate-fadeIn">
-                <p className="font-semibold text-gray-800">Sarah Johnson</p>
-                <p className="text-sm text-gray-600">Premium Member</p>
+                <p className={`font-semibold ${darkMode ? "text-white" : "text-gray-800"}`}>{user?.displayName || "User"}</p>
+                <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-600"}`}>Premium Member</p>
               </div>
             )}
             {!isCollapsed && (
-              <button className="p-2 rounded-lg hover:bg-pink-100 transition-all duration-200 hover:scale-110">
-                <LogOut className="w-4 h-4 text-gray-600" />
+              <button className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${darkMode ? "hover:bg-gray-800" : "hover:bg-pink-100"}`}>
+                <LogOut className={`w-4 h-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`} />
               </button>
             )}
           </div>
