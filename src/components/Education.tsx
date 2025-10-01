@@ -49,7 +49,6 @@ interface ScrollStackProps {
   scaleDuration?: number
   rotationAmount?: number
   blurAmount?: number
-  onStackComplete?: () => void
 }
 
 const ScrollStack: React.FC<ScrollStackProps> = ({
@@ -64,7 +63,6 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
   scaleDuration = 0.5,
   rotationAmount = 0,
   blurAmount = 0,
-  onStackComplete,
 }) => {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const stackCompletedRef = useRef(false)
@@ -313,7 +311,15 @@ interface Quiz {
   questionsData: QuizQuestion[]
 }
 
-const Consultation: React.FC = () => {
+import type { User as FirebaseUser } from "firebase/auth";
+
+interface EducationProps {
+  user: FirebaseUser;
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
+}
+
+const Education: React.FC<EducationProps> = ({ user, darkMode, setDarkMode }) => {
   const [activeSection, setActiveSection] = useState<string>("blogs")
   const [activeTab, setActiveTab] = useState<string>("education")
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null)
@@ -323,7 +329,7 @@ const Consultation: React.FC = () => {
   const [showResults, setShowResults] = useState<boolean>(false)
   const [quizScore, setQuizScore] = useState<number>(0)
 
-  const blogPosts: BlogPost[] = [
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
     {
       id: 1,
       title: "Understanding Common Hair Diseases and Their Prevention",
@@ -1681,7 +1687,68 @@ const Consultation: React.FC = () => {
         <p>By appreciating the remarkable complexity of hair growth, we can make informed decisions about hair care and treatment options, leading to better outcomes and healthier hair throughout our lives.</p>
       `,
     },
-  ]
+  ])
+
+  // Blog upload state
+  const [showUpload, setShowUpload] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadContent, setUploadContent] = useState("");
+  const [uploadImage, setUploadImage] = useState<string | null>(null);
+  const [uploadVideo, setUploadVideo] = useState<string | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadImage(reader.result as string);
+        setUploadPreview(reader.result as string);
+        setUploadVideo(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle video upload
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadVideo(reader.result as string);
+        setUploadPreview(reader.result as string);
+        setUploadImage(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle blog post submit
+  const handleBlogSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadTitle || !uploadContent || (!uploadImage && !uploadVideo)) return;
+    const newBlog: BlogPost = {
+      id: Date.now(),
+      title: uploadTitle,
+      category: "User Blog",
+      readTime: "Just now",
+      excerpt: uploadContent.slice(0, 100) + "...",
+      author: user?.displayName || "Anonymous",
+      publishDate: new Date().toLocaleDateString(),
+      tags: ["User", "Blog"],
+      image: uploadImage || "",
+      content: uploadContent,
+    };
+    setBlogPosts([newBlog, ...blogPosts]);
+    setShowUpload(false);
+    setUploadTitle("");
+    setUploadContent("");
+    setUploadImage(null);
+    setUploadVideo(null);
+    setUploadPreview(null);
+  };
 
   const videos: VideoContent[] = [
     {
@@ -2821,7 +2888,13 @@ const Consultation: React.FC = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 flex">
+    <div
+      className={`min-h-screen flex ${
+        darkMode
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100'
+          : 'bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 text-gray-900'
+      }`}
+    >
       {/* Custom CSS for animations */}
       <style>{`
         @keyframes slideInUp {
@@ -2857,8 +2930,8 @@ const Consultation: React.FC = () => {
         }
       `}</style>
 
-      {/* Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+  {/* Sidebar */}
+  <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={user} darkMode={darkMode} />
 
       {/* Quiz Interface Overlay */}
       {selectedQuiz && renderQuizInterface()}
@@ -2866,7 +2939,13 @@ const Consultation: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-pink-100">
+        <div
+          className={
+            darkMode
+              ? 'bg-gray-900/80 backdrop-blur-md shadow-lg border-b border-gray-800'
+              : 'bg-white/80 backdrop-blur-md shadow-lg border-b border-pink-100'
+          }
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="text-center">
               <div className="flex items-center justify-center mb-4">
@@ -2874,10 +2953,18 @@ const Consultation: React.FC = () => {
                   <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent mb-4">
+              <h1 className={
+                darkMode
+                  ? 'text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent mb-4'
+                  : 'text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent mb-4'
+              }>
                 Educational Content
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base lg:text-lg max-w-3xl mx-auto px-4">
+              <p className={
+                darkMode
+                  ? 'text-gray-300 text-sm sm:text-base lg:text-lg max-w-3xl mx-auto px-4'
+                  : 'text-gray-600 text-sm sm:text-base lg:text-lg max-w-3xl mx-auto px-4'
+              }>
                 Comprehensive educational resources to help you understand hair health, treatments, and best practices
               </p>
             </div>
@@ -2886,7 +2973,13 @@ const Consultation: React.FC = () => {
 
         {/* Navigation */}
         {!selectedBlog && (
-          <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-pink-100">
+          <div
+            className={
+              darkMode
+                ? 'bg-gray-900/80 backdrop-blur-md shadow-sm border-b border-gray-800'
+                : 'bg-white/80 backdrop-blur-md shadow-sm border-b border-pink-100'
+            }
+          >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-center space-x-2 sm:space-x-4 lg:space-x-8 overflow-x-auto">
                 {[
@@ -2915,12 +3008,89 @@ const Consultation: React.FC = () => {
         {/* Main Content */}
         {!selectedBlog && (
           <main className="flex-1">
-            {activeSection === "blogs" && renderBlogs()}
+            {activeSection === "blogs" && (
+              <div className={darkMode ? 'bg-gray-900' : ''}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-pink-600">Latest Blogs</h2>
+                  <button className="bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-2 rounded-xl font-bold hover:from-pink-600 hover:to-orange-600 transition-all" onClick={() => setShowUpload(true)}>
+                    Post Blog
+                  </button>
+                </div>
+                {showUpload && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <form className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative" onSubmit={handleBlogSubmit}>
+                      <button type="button" className="absolute top-4 right-4 text-gray-500 hover:text-pink-600" onClick={() => setShowUpload(false)}>
+                        <X className="w-6 h-6" />
+                      </button>
+                      <h2 className="text-2xl font-bold mb-4 text-pink-600">Create a Blog Post</h2>
+                      <input
+                        type="text"
+                        placeholder="Blog Title"
+                        className="w-full mb-4 px-4 py-2 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        value={uploadTitle}
+                        onChange={e => setUploadTitle(e.target.value)}
+                        required
+                      />
+                      <textarea
+                        placeholder="Write your blog content here..."
+                        className="w-full mb-4 px-4 py-2 border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        value={uploadContent}
+                        onChange={e => setUploadContent(e.target.value)}
+                        rows={6}
+                        required
+                      />
+                      <div className="mb-4 flex gap-4">
+                        <label className="flex flex-col items-center cursor-pointer">
+                          <span className="text-sm text-pink-600 mb-1">Upload Image</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                          <BookOpen className="w-6 h-6 text-pink-500" />
+                        </label>
+                        <label className="flex flex-col items-center cursor-pointer">
+                          <span className="text-sm text-pink-600 mb-1">Upload Video</span>
+                          <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+                          <Video className="w-6 h-6 text-pink-500" />
+                        </label>
+                      </div>
+                      {uploadPreview && (
+                        <div className="mb-4">
+                          {uploadImage && <img src={uploadImage} alt="Preview" className="rounded-xl w-full max-h-48 object-cover" />}
+                          {uploadVideo && <video src={uploadVideo} controls className="rounded-xl w-full max-h-48 object-cover" />}
+                        </div>
+                      )}
+                      <button type="submit" className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-xl font-bold hover:from-pink-600 hover:to-orange-600 transition-all">Post Blog</button>
+                    </form>
+                  </div>
+                )}
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  {blogPosts.map((blog) => (
+                    <div key={blog.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-pink-100">
+                      {blog.image && <img src={blog.image} alt={blog.title} className="w-full h-48 object-cover" />}
+                      {blog.image === "" && blog.content.includes("<video") && (
+                        <div className="w-full h-48 flex items-center justify-center bg-gray-100">
+                          <span className="text-gray-500">Video Blog</span>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{blog.title}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{blog.excerpt}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                          <span>{blog.author}</span>
+                          <span>{blog.publishDate}</span>
+                        </div>
+                        <button className="text-pink-500 font-semibold hover:underline" onClick={() => setSelectedBlog(blog)}>
+                          Read More
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeSection === "videos" && (
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">{renderVideos()}</div>
+              <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 ${darkMode ? 'bg-gray-900' : ''}`}>{renderVideos()}</div>
             )}
             {activeSection === "quizzes" && (
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">{renderQuizzes()}</div>
+              <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 ${darkMode ? 'bg-gray-900' : ''}`}>{renderQuizzes()}</div>
             )}
           </main>
         )}
@@ -2932,4 +3102,4 @@ const Consultation: React.FC = () => {
   )
 }
 
-export default Consultation
+export default Education
