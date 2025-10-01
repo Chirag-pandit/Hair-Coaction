@@ -34,8 +34,16 @@ import {
   Clock,
 } from "lucide-react"
 import Sidebar from "./Sidebar";
+// import { auth } from "../../firebase";
+// import { fetchUserProfile, updateUserProfile } from "../../api/profile";
 
-const Profile = () => {
+import type { User as FirebaseUser } from "firebase/auth";
+
+interface ProfileProps {
+  user: FirebaseUser;
+}
+
+const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -43,41 +51,59 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // User profile data state
-  const [profileData, setProfileData] = useState({
-    // Basic Info
-    firstName: "Dr. Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@haircoaction.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    dateOfBirth: "1985-03-15",
-    bio: "Passionate trichologist with over 10 years of experience in hair health and restoration. Dedicated to helping patients achieve their hair goals through evidence-based treatments and personalized care.",
-
-    // Professional Info
-    title: "Lead Trichologist",
-    organization: "Hair Health Institute",
-    specialization: "Hair Restoration & Scalp Disorders",
-    experience: "10+ years",
-    education: "PhD in Trichology, Harvard Medical School",
-    certifications: ["Board Certified Trichologist", "Hair Transplant Specialist", "Dermatology Fellowship"],
-
-    // Profile Image
-    profileImage: "/placeholder.svg?height=200&width=200&text=Dr.+Sarah+Johnson",
-
-    // Social Links
+  type ProfileData = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    location: string;
+    dateOfBirth: string;
+    bio: string;
+    title: string;
+    organization: string;
+    specialization: string;
+    experience: string;
+    education: string;
+    certifications: string[];
+    profileImage: string;
     socialLinks: {
-      linkedin: "https://linkedin.com/in/sarahjohnson",
-      twitter: "https://twitter.com/drsarahhair",
+      linkedin: string;
+      twitter: string;
+      instagram: string;
+      facebook: string;
+      website: string;
+    };
+    showEmail: boolean;
+    showPhone: boolean;
+    showLocation: boolean;
+  };
+
+  const [profileData, setProfileData] = useState<ProfileData>({
+    firstName: "",
+    lastName: "",
+    email: user?.email || "",
+    phone: "",
+    location: "",
+    dateOfBirth: "",
+    bio: "",
+    title: "",
+    organization: "",
+    specialization: "",
+    experience: "",
+    education: "",
+    certifications: [],
+    profileImage: "",
+    socialLinks: {
+      linkedin: "",
+      twitter: "",
       instagram: "",
       facebook: "",
-      website: "https://sarahjohnson-trichology.com",
+      website: "",
     },
-
-    // Privacy Settings
     showEmail: true,
     showPhone: true,
     showLocation: true,
-  })
+  });
 
   // Stats data
   const [stats] = useState({
@@ -95,9 +121,27 @@ const Profile = () => {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimateCards(true), 300)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setAnimateCards(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch user profile from Firestore using API function
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.uid) return;
+      try {
+        const res = await fetch(`/api/profile`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfileData((prev) => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        // handle error
+      }
+    };
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleInputChange = (field: string, value: string) => {
     setProfileData((prev) => ({
@@ -166,19 +210,28 @@ const Profile = () => {
   }
 
   const handleSave = async () => {
-    if (!validateForm()) return
-
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    setIsLoading(false)
-    setIsEditing(false)
-    setShowSuccess(true)
-
-    setTimeout(() => setShowSuccess(false), 3000)
-  }
+    if (!validateForm()) return;
+    setIsLoading(true);
+    try {
+      if (user?.uid && user.email) {
+        const res = await fetch(`/api/profile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...profileData, uid: String(user.uid), email: String(user.email) }),
+        });
+        if (!res.ok) throw new Error("Failed to save profile");
+      }
+      setIsLoading(false);
+      setIsEditing(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      setIsLoading(false);
+      alert("Failed to save profile. Please try again.");
+    }
+  };
 
   const handleCancel = () => {
     setIsEditing(false)
@@ -211,7 +264,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 flex">
       {/* Sidebar */}
-      <Sidebar activeTab="profile" setActiveTab={() => {}} />
+  <Sidebar activeTab="profile" setActiveTab={() => {}} user={user} />
       {/* Main Content */}
       <div className="flex-1 flex flex-col py-8 px-4">
         <div className="max-w-6xl mx-auto">
