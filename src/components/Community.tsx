@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
-import { Heart, MessageCircle, Share2, User, Camera, Sparkles, Crown, Award } from "lucide-react"
+import type { User } from "firebase/auth"
+import { Heart, MessageCircle, Share2, User as UserIcon, Camera, Sparkles, Crown, Award } from "lucide-react"
 import Sidebar from "./Sidebar";
 
 interface Post {
@@ -30,7 +30,11 @@ interface Member {
   verified: boolean
 }
 
-const CommunityPage: React.FC = () => {
+interface CommunityPageProps {
+  user: User;
+}
+
+const CommunityPage: React.FC<CommunityPageProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState<"feed" | "members" | "challenges">("feed")
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set())
 
@@ -166,7 +170,7 @@ const CommunityPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-100 via-orange-50 to-pink-200 flex">
       {/* Sidebar */}
-      <Sidebar activeTab="community" setActiveTab={() => {}} />
+      <Sidebar activeTab="community" setActiveTab={() => {}} user={user} />
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-x-hidden">
         {/* Community Header */}
@@ -337,7 +341,7 @@ const CommunityPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-pink-50 rounded-lg border border-pink-200">
                     <div className="w-10 h-10 bg-gradient-to-r from-pink-400 to-orange-400 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                      <UserIcon className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-800">Expert Q&A Session</p>
@@ -375,7 +379,7 @@ const CommunityPage: React.FC = () => {
                 <div className="flex space-x-1">
                   {[
                     { key: "feed", label: "Community Feed", icon: MessageCircle },
-                    { key: "members", label: "Members", icon: User },
+                    { key: "members", label: "Members", icon: UserIcon },
                     { key: "challenges", label: "Challenges", icon: Award },
                   ].map(({ key, label, icon: Icon }) => (
                     <button
